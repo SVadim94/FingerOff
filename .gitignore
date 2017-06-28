@@ -3,3 +3,6 @@ include
 lib
 .Python
 pip-selfcheck.json
+config.py
+__pycache__
+*.db
