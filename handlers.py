@@ -1,7 +1,6 @@
 from forex_python.converter import CurrencyRates, CurrencyCodes
-from models import Debt, User, Chat
+from models import Debt, User, Chat, DebtGraph
 from decimal import Decimal
-import config
 
 
 cc = CurrencyCodes()
@@ -9,6 +8,9 @@ cr = CurrencyRates()
 
 
 def check_currency(currency, default_currency):
+    if not currency:
+        return default_currency
+
     currency = currency.upper()
 
     if cc.get_currency_name(currency):
@@ -17,10 +19,10 @@ def check_currency(currency, default_currency):
         return default_currency
 
 
-def add(chat_id, src, dst, amount, currency=None):
-    chat, _ = Chat.get_or_create(chat_id=chat_id)
-    src, _ = User.get_or_create(username=src)
-    dst, _ = User.get_or_create(username=dst)
+def add(message, lender, debtor, amount, currency=None):
+    chat, _ = Chat.get_or_create(id=message.chat.id)
+    lender, _ = User.get_or_create(username=lender[1:].upper())
+    debtor, _ = User.get_or_create(username=debtor[1:].upper())
     amount = Decimal(amount)
 
     currency = check_currency(currency, chat.currency)
@@ -28,19 +30,30 @@ def add(chat_id, src, dst, amount, currency=None):
     if currency != chat.currency:
         amount = cr.convert(currency, chat.currency, amount)
 
-    debt = Debt(src=src, dst=dst, amount=amount)
+    debt = Debt(chat=chat, lender=lender, debtor=debtor, amount=amount)
     debt.save()
 
-    return '%s -> %s: %d' % (src.username, dst.username, amount)
+    DebtGraph.add(debt)
+
+    return str(debt)
 
 
-def set_default_currency(chat_id, currency):
-    chat, _ = Chat.get_or_create(chat_id=chat_id)
+def set_default_currency(message, currency):
+    chat, _ = Chat.get_or_create(id=message.chat.id)
     old_currency = chat.currency
     chat.currency = check_currency(currency, chat.currency)
     chat.save()
 
     return "Changed the default currency from %s to %s" % (old_currency, chat.currency)
+
+
+def optimize(message):
+    sender = message.from_user.username
+
+    loans = [Debt.select().where(User.lender == sender)]
+    debts = [Debt.select().where(User.debtor == sender)]
+
+    return message.from_user.username
 
 
 def usage(_):
@@ -54,13 +67,9 @@ Usage:
 """
 
 
-def evaler(args):
-    return eval(' '.join(args))
-
-cb = {
+handlers = {
     "/add": add,
-    "/eval": evaler,
     "/set_default_currency": set_default_currency,
+    "/optimize": optimize,
     "/usage": usage
 }
-

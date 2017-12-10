@@ -1,4 +1,4 @@
-from handlers import cb
+from handlers import handlers
 import telebot
 import config
 
@@ -10,10 +10,10 @@ bot = telebot.TeleBot(config.token)
 def calculator(message):
     try:
         cmd = message.text.split(' ')
-        msg = cb.get(cmd[0], cb['/usage'])(message.chat.id, *cmd[1:])
+        msg = handlers.get(cmd[0], handlers['/usage'])(message, *cmd[1:])
         bot.send_message(message.chat.id, msg)
     except Exception as e:
-        bot.send_message(message.chat.id, 'Vadim zaebal! Exception: %s' % e)
+        bot.send_message(message.chat.id, 'Exception: %s' % e)
 
 if __name__ == '__main__':
     bot.polling(none_stop=True)
