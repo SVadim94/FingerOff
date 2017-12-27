@@ -13,6 +13,6 @@ class BaseModel(Model):
 from .DebtGraph import DebtGraph
 from .Chat import Chat
 from .User import User
-from .Debt import Debt
+from .Transaction import Transaction, TransactionType
 
-db.create_tables([Chat, User, Debt, DebtGraph], safe=True)
+db.create_tables([Chat, User, Transaction, DebtGraph], safe=True)

@@ -7,24 +7,37 @@ g.add_edge('d','b',weight=3)
 g.add_edge('e','a',weight=30)
 ```
 - [x] Сериализация (pickle, last version with timestamp)
-- [ ] Реализовать граф долгов
-   - [ ] Blueprint будет использовать внутри себя DebtGraph.
-   - [ ] Blueprint будет реализовывать методы, которые синхронно обновляют nx.DiGraph и DebtGraph.
-   - [ ] Хранение рёбер исключительно в алфавитном порядке. Всё API Blueprint должно это учитывать (декоратор? модификация класса Debt?).
+- [x] Реализовать граф долгов
 - [ ] Эвристики на графах
-   - [x] self_debt: x -(a)-> x => 0
-   - [x] no_debt: x->(0)->y => 0
-   - [ ] aggregate: x -(a)-> y & x -(b)-> y => x -(a+b)-> y
-   - [ ] x_to_y_to_x: x -(a)-> y & y -(b)-> x & a > b => x -(a - b)-> y
-   - [x] transitive: x -(a)-> y & y -(a)-> z => x -(a)-> z
-   - [ ] rucksack: x_1 -(a_1)-> y & ... & x_n -(a_1)-> y & y -(a_1+..+a_n)-> z => x_1 -(a_1)-> z & ... & x_n -(a_1)-> z
+   - [x] self_debt: $x \xrightarrow{a} x \Rightarrow 0$
+   - [x] no_debt: $x \xrightarrow{0} y \Rightarrow 0$
+   - [x] aggregate: $x \xrightarrow{a} y \land x \xrightarrow{b} y \Rightarrow x \xrightarrow{a+b} y$
+   - [x] x\_to\_y\_to\_x: $x \xrightarrow{a} y \land y \xrightarrow{b} x \land a > b \Rightarrow x \xrightarrow{a - b} y$
+   - [x] transitive: $x \xrightarrow{a} y \land y \xrightarrow{a} z \Rightarrow x \xrightarrow{a} z$
+   - [ ] cycle: $x_1 \xrightarrow{d_1} x_2 \land x_2 \xrightarrow{d_2} x_3 \land \cdots \land x_n \xrightarrow{d_n} x_1 \Rightarrow d_i := d_i - \min\limits_{j}(d_{j})​$
+   - [ ] rucksack: $x_1 \xrightarrow{a_1} y \land \cdots \land x_n \xrightarrow{a_n} y \land y \xrightarrow{a_1+ \cdots +a_n} z \Rightarrow x_1 \xrightarrow{a_1} z \land \cdots \land x_n \xrightarrow{a_n} z$
 - [ ] Журнал транзакций
-   - [ ] Возможность запросить у бота всю запрошенную историю долгов для данного чата
+   - [ ] Возможность запросить у бота всю историю долгов для данного чата
+      - [ ] История за конкретный период
+      - [ ] История за последние N дней
+      - [ ] История для конкретного юзера
    - [ ] Возможность очистить историю долгов (с согласия всех фигурантов)
       - [ ] Запрос на очистку сбрасывается (и/или):
          - [ ] При добавлении транзакции
          - [ ] Через N минут
    - [ ] Возможность отмены транзакции (старая транзакция остаётся в журнале, однако не учитывается при расчёте графа долгов). При этом граф (либо):
       - [ ] Пересчитывается с нуля
-      - [ ] Обновляется с учётом добавления обратной транзакции. Например, отмена транзакции  x->(a)->y => 0 приведёт к тому, что добавится транзакция y->(a)->x
+      - [ ] Обновляется с учётом добавления обратной транзакции. Например, отмена транзакции $x \xrightarrow{a} y$ приведёт к тому, что в граф добавится ребро $y \xrightarrow{a} x$
+   - [ ] Добавить описание транзакций
+- [ ] Общая покупка (поход в бар, ресторан)
+   - [ ] Сохранить чек
+      - [ ] Доступ к истории сообщений
+      - [ ] Ссылка на гуглодоку
+      - [ ] File Upload
+   - [ ] Кто сколько должен и кто сколько внёс -> кто и кому должен или кому должны денег и кто должны
+- [ ] Тесты
+   - [x] Добавить тесты
+   - [ ] Запуск тестов
+- [ ] Логи
+   - [ ] Добавить логи
 

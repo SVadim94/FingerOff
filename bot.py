@@ -1,7 +1,9 @@
-from handlers import handlers
-import telebot
-import config
+import traceback
 
+import telebot
+
+import config
+from handlers import handlers
 
 bot = telebot.TeleBot(config.token)
 
@@ -13,7 +15,8 @@ def calculator(message):
         msg = handlers.get(cmd[0], handlers['/usage'])(message, *cmd[1:])
         bot.send_message(message.chat.id, msg)
     except Exception as e:
-        bot.send_message(message.chat.id, 'Exception: %s' % e)
+        bot.send_message(message.chat.id, "An error occured")
+        traceback.print_exc()
 
 if __name__ == '__main__':
     bot.polling(none_stop=True)
