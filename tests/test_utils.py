@@ -13,7 +13,7 @@ class TestUtils(unittest.TestCase):
         self.assertFalse(is_int('Some text'))
         self.assertFalse(is_int('123a'))
         self.assertFalse(is_int('1e1'))
-    
+
     def test_join_columns(self):
         self.assertEqual(join_columns([1,2,3]), "1\n2\n3")
         self.assertEqual(join_columns(['a']), "a")

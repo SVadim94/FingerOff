@@ -99,14 +99,15 @@ def show(message, *args):
 
     query = Chat.id == message.chat.id
     if usernames:
-        username = usernames[0].upper()
+        for username in usernames:
+            username = username.upper()
 
-        try:
-            user = User.get(User.username == username)
-        except:
-            return "No such user %s" % username
+            try:
+                user = User.get(User.username == username)
+            except:
+                return "No such user %s" % username
 
-        query &= (Transaction.creditor == user) | (Transaction.debtor == user)
+            query &= (Transaction.creditor == user) | (Transaction.debtor == user)
 
     if numbers:
         N = int(numbers[0])
