@@ -98,6 +98,7 @@ def show(message, *args):
         return "See /usage for the help"
 
     query = Chat.id == message.chat.id
+
     if usernames:
         for username in usernames:
             username = username.upper()
@@ -111,10 +112,10 @@ def show(message, *args):
 
     if numbers:
         N = int(numbers[0])
-        last_N = Transaction.date >= (date.today() - timedelta(days=N))
-        query &= last_N
+    else:
+        N = 10
 
-    return join_columns(Transaction.select().join(Chat).where(query))
+    return join_columns(Transaction.select().join(Chat).where(query).limit(N))
 
 
 def usage(_):
@@ -125,9 +126,9 @@ Usage:
 /add <src> <dst> <amount> [currency] - add a debt
 /show all
     prints all transactions
-/show [N] [@nickname]
+/show [N] [@nickname] [@nickname]
     prints all transactions:
-        N - in N days
+        N - last N transactions (default 10)
         @nickname - related to @nickname user
 /usage - show this message
 """
