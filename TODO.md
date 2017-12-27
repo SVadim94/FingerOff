@@ -13,7 +13,7 @@ g.add_edge('e','a',weight=30)
    - [x] no_debt: $x \xrightarrow{0} y \Rightarrow 0$
    - [x] aggregate: $x \xrightarrow{a} y \land x \xrightarrow{b} y \Rightarrow x \xrightarrow{a+b} y$
    - [x] x\_to\_y\_to\_x: $x \xrightarrow{a} y \land y \xrightarrow{b} x \land a > b \Rightarrow x \xrightarrow{a - b} y$
-   - [x] transitive: $x \xrightarrow{a} y \land y \xrightarrow{a} z \Rightarrow x \xrightarrow{a} z$
+   - [x] transitive: $x \xrightarrow{a} y \land y \xrightarrow{a} z \land x \xrightarrow{b} z \Rightarrow x \xrightarrow{a + b} z$
    - [ ] cycle: $x_1 \xrightarrow{d_1} x_2 \land x_2 \xrightarrow{d_2} x_3 \land \cdots \land x_n \xrightarrow{d_n} x_1 \Rightarrow d_i := d_i - \min\limits_{j}(d_{j})​$
    - [ ] rucksack: $x_1 \xrightarrow{a_1} y \land \cdots \land x_n \xrightarrow{a_n} y \land y \xrightarrow{a_1+ \cdots +a_n} z \Rightarrow x_1 \xrightarrow{a_1} z \land \cdots \land x_n \xrightarrow{a_n} z$
 - [ ] Журнал транзакций

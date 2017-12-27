@@ -22,23 +22,44 @@ class DebtGraphModel:
             if a == b:
                 self.graph.remove_edge(a, b)
 
-    def transitive(self, first, second):
-        for node in [first, second]:
+    def transitive(self):
+        changes = False
+
+        for node in self.graph.nodes():
             debts = self.graph.out_edges(node, data='weight')
             lends = self.graph.in_edges(node, data='weight')
 
-            for b, c, weight_b_c in debts:
-                for a, b, weight_a_b in lends:
+            for b, c, weight_b_c in debts.copy():
+                for a, b, weight_a_b in lends.copy():
                     if weight_a_b == weight_b_c:
                         # delete (a, b) and (b, c)
                         self.graph.remove_edge(a, b)
                         self.graph.remove_edge(b, c)
                         # add (a, c)
-                        self.graph.add_edge(a, c, weight=weight_a_b)
+                        self.merge(a, c, weight_a_b)
+
+                        changes = True
+
+        return changes
 
     def optimize(self, first, second):
-        self.transitive(first, second)
+        while self.transitive():
+            pass
+
         # self.no_debt(self)
+
+    def merge(self, creditor, debtor, weight):
+        if self.graph.has_edge(debtor, creditor):
+            self.graph.get_edge_data(debtor, creditor)['weight'] += weight
+        elif self.graph.has_edge(creditor, debtor):
+            self.graph.get_edge_data(creditor, debtor)['weight'] -= weight
+
+            if self.graph.get_edge_data(creditor, debtor)['weight'] < 0:
+                weight = -self.graph.get_edge_data(creditor, debtor)['weight']
+                self.graph.remove_edge(creditor, debtor)
+                self.graph.add_edge(debtor, creditor, weight=weight)
+        else:
+            self.graph.add_edge(debtor, creditor, weight=weight)
 
     def add_debt(self, debt):
         creditor = debt.creditor.username
@@ -47,19 +68,12 @@ class DebtGraphModel:
         if debtor == creditor or debt.amount == 0:
             return
 
-        if self.graph.has_edge(debtor, creditor):
-            self.graph.edge[debtor][creditor]['weight'] += debt.amount
-        elif self.graph.has_edge(creditor, debtor):
-            self.graph.edge[creditor][debtor]['weight'] -= debt.amount
+        self.merge(creditor, debtor, debt.amount)
 
-            if self.graph.edge[creditor][debtor]['weight'] < 0:
-                weight = -self.graph.edge[creditor][debtor]['weight']
-                self.graph.remove_edge(creditor, debtor)
-                self.graph.add_edge(debtor, creditor, weight=weight)
-        else:
-            self.graph.add_edge(debtor, creditor, weight=debt.amount)
+        # self.optimize(debtor, creditor)
 
-        self.optimize(debtor, creditor)
+    def print_graph(self):
+        pass
 
 
 class DebtGraph(BaseModel):
