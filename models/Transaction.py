@@ -18,14 +18,14 @@ class Transaction(BaseModel):
     chat = ForeignKeyField(Chat)
     transaction_id = UUIDField()
     transaction_type = IntegerField(default=TransactionType.DEBT.value)
-    date = DateTimeField()
+    timestamp = DateTimeField()
     debtor = ForeignKeyField(User, related_name='debtor')
     creditor = ForeignKeyField(User, related_name='creditor')
-    amount = DecimalField(decimal_places=2)
+    amount = DecimalField(decimal_places=3)
     currency = CharField(default=config.default_currency, max_length=3)
-    original_amount = DecimalField(decimal_places=2)
+    original_amount = DecimalField(decimal_places=3)
     original_currency = CharField(default=config.default_currency, max_length=3)
-    description = CharField(null=True, max_length=4096)
+    description = CharField(default="", max_length=4096)
     extra = UUIDField(null=True)
 
     def __str__(self):
@@ -35,9 +35,9 @@ class Transaction(BaseModel):
                 "extra": self.extra
             }
 
-        return "[%(transaction_id)s] | %(date)s | (%(creditor)s)>-(%(amount)d%(currency)s)->(%(debtor)s) | %(original_amount)s%(original_currency)s -- %(description)s" % {
+        return "[%(transaction_id)s] | %(timestamp)s | (%(creditor)s)>-(%(amount)s %(currency)s)->(%(debtor)s) | %(original_amount)s %(original_currency)s -- %(description)s" % {
             "transaction_id": self.transaction_id,
-            "date": self.date,
+            "timestamp": self.timestamp,
             "creditor": self.creditor.username,
             "debtor": self.debtor.username,
             "amount": self.amount,

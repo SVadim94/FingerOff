@@ -1,15 +1,14 @@
 import unittest
 from unittest.mock import Mock
 
-from handlers import show, add
-
-from tutils import destroy_chat, set_or_create_chat
+from handlers import add, show
+from tutils import *
 
 
 class TestHandlers(unittest.TestCase):
     def setUp(self):
         # Create test chat with id equals to -1
-        self.chat = set_or_create_chat(id=-1, inited=True)
+        self.chat = set_or_create_chat()
         self.message = Mock()
         self.message.chat = self.chat
 
@@ -17,9 +16,9 @@ class TestHandlers(unittest.TestCase):
         self.assertEqual(show(self.message, '1'), 'No results')
 
     def test_add(self):
-        add(self.message, "@Pupa", "@Lupa", "10", "EUR")
-        add(self.message, "@Pupa", "@Lupa", "5", "EUR")
-        add(self.message, "@Pupa", "@Buhg", "15", "EUR")
+        add(self.message, test_users[0], test_users[1], "10", "EUR")
+        add(self.message, test_users[0], test_users[1], "5", "EUR")
+        add(self.message, test_users[0], test_users[2], "15", "EUR")
 
         self.assertNotEqual(show(self.message, '1'), 'No results')
 
@@ -27,20 +26,20 @@ class TestHandlers(unittest.TestCase):
         self.assertEqual(show(self.message, '0'), "No results")
         # self.assertEqual(show(self.message, '-1'), "No results")
 
-        self.assertEqual(len(show(self.message, '@Pupa').split('\n')), 3)
-        self.assertEqual(len(show(self.message, '@Lupa').split('\n')), 2)
-        self.assertEqual(len(show(self.message, '@Buhg').split('\n')), 1)
-        self.assertNotEqual(show(self.message, '@Buhg'), 'No results')
+        self.assertEqual(len(show(self.message, test_users[0]).split('\n')), 3)
+        self.assertEqual(len(show(self.message, test_users[1]).split('\n')), 2)
+        self.assertEqual(len(show(self.message, test_users[2]).split('\n')), 1)
+        self.assertNotEqual(show(self.message, test_users[2]), 'No results')
 
-        self.assertEqual(len(show(self.message, '@Pupa', '1').split('\n')), 1)
-        self.assertEqual(len(show(self.message, '@Pupa', '2').split('\n')), 2)
-        self.assertEqual(len(show(self.message, '@Pupa', '3').split('\n')), 3)
-        self.assertEqual(len(show(self.message, '20', '@Lupa').split('\n')), 2)
-        self.assertEqual(len(show(self.message, '@Buhg', '10').split('\n')), 1)
-        self.assertNotEqual(show(self.message, '@Buhg', '10'), 'No results')
+        self.assertEqual(len(show(self.message, test_users[0], '1').split('\n')), 1)
+        self.assertEqual(len(show(self.message, test_users[0], '2').split('\n')), 2)
+        self.assertEqual(len(show(self.message, test_users[0], '3').split('\n')), 3)
+        self.assertEqual(len(show(self.message, '20', test_users[1]).split('\n')), 2)
+        self.assertEqual(len(show(self.message, test_users[2], '10').split('\n')), 1)
+        self.assertNotEqual(show(self.message, test_users[2], '10'), 'No results')
 
-        self.assertEqual(len(show(self.message, '@Pupa', '@Lupa').split('\n')), 2)
-        self.assertEqual(show(self.message, '@Buhg', '@Lupa'), 'No results')
+        self.assertEqual(len(show(self.message, test_users[0], test_users[1]).split('\n')), 2)
+        self.assertEqual(show(self.message, test_users[2], test_users[1]), 'No results')
 
     def tearDown(self):
         destroy_chat()

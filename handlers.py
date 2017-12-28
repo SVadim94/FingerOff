@@ -1,15 +1,15 @@
-from datetime import date, datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from itertools import filterfalse
 from uuid import uuid4
 
 from forex_python.converter import CurrencyCodes, CurrencyRates
 
-from models import Chat, DebtGraph, Transaction, TransactionType, User
-from utils import is_int, join_columns
+from models import Chat, UserBalance, Transaction, TransactionType, User
+from utils import is_int, join_columns, merge_transaction, get_or_create_user
 
 cc = CurrencyCodes()
-cr = CurrencyRates()
+cr = CurrencyRates(force_decimal=True)
 
 
 def check_inited(need_to_be_inited):
@@ -45,8 +45,8 @@ def check_currency(currency, default_currency):
 @check_inited(True)
 def add(message, creditor, debtor, amount, currency=None):
     chat, _ = Chat.get_or_create(id=message.chat.id)
-    creditor, _ = User.get_or_create(username=creditor.upper())
-    debtor, _ = User.get_or_create(username=debtor.upper())
+    creditor = get_or_create_user(creditor)
+    debtor = get_or_create_user(debtor)
     amount = Decimal(amount)
     original_amount = amount
 
@@ -54,11 +54,12 @@ def add(message, creditor, debtor, amount, currency=None):
 
     if currency != chat.currency:
         amount = cr.convert(currency, chat.currency, amount)
+
     transaction = Transaction(
         chat=chat,
         transaction_id=uuid4(),
         transaction_type=TransactionType.DEBT.value,
-        date=datetime.now(),
+        timestamp=datetime.now(),
         debtor=debtor,
         creditor=creditor,
         amount=amount,
@@ -68,9 +69,7 @@ def add(message, creditor, debtor, amount, currency=None):
     )
     transaction.save()
 
-    debt_graph = DebtGraph.load_graph(chat)
-    debt_graph.add_debt(transaction)
-    DebtGraph.save_graph(chat, debt_graph)
+    merge_transaction(transaction)
 
     return str(transaction)
 
@@ -87,21 +86,20 @@ def set_default_currency(message, currency='RUB'):
 
 
 @check_inited(True)
+def balance(message):
+    return join_columns(UserBalance.select().where(UserBalance.chat == Chat.get(Chat.id == message.chat.id)))
+
+
+@check_inited(True)
 def show(message, *args):
-    if args[0] == "all":
-        return join_columns(Transaction.select())
-
-    usernames = [ _ for _ in args if _.startswith('@')]
+    usernames = [_ for _ in args if _.startswith('@')]
     numbers = [_ for _ in args if is_int(_)]
-
-    if not numbers and not usernames:
-        return "See /usage for the help"
 
     query = Chat.id == message.chat.id
 
     if usernames:
         for username in usernames:
-            username = username.upper()
+            username = username.lower()
 
             try:
                 user = User.get(User.username == username)
@@ -115,28 +113,40 @@ def show(message, *args):
     else:
         N = 10
 
-    return join_columns(Transaction.select().join(Chat).where(query).limit(N))
+    return join_columns(Transaction.select().join(Chat).where(query).order_by(Transaction.timestamp.desc()).limit(N))
 
 
 def usage(_):
     return """\
 Usage:
 
-/init <currency> - set default currency for debts
-/add <src> <dst> <amount> [currency] - add a debt
-/show all
-    prints all transactions
+/init <currency>
+    set default currency for debts
+/add <debtor> <creditor> <amount> [currency]
+    add a debt
+/balance
+    shows balance for current chat
 /show [N] [@nickname] [@nickname]
-    prints all transactions:
+    prints transactions:
         N - last N transactions (default 10)
-        @nickname - related to @nickname user
-/usage - show this message
+        @nickname - transactions related to @nickname user
+/cancel <transaction_id>
+    cancels transaction by its id
+/archive
+    archives debts history and returns archive's id
+/get <archive_id>
+    get archive by id
+/purge
+    cleans debts history (history will be archived)
+/usage
+    show this message
 """
 
 
 handlers = {
     "/init": set_default_currency,
     "/add": add,
+    "/balance": balance,
     "/show": show,
     "/usage": usage
 }

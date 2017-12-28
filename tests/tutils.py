@@ -4,6 +4,11 @@ import peewee
 
 from models import Chat, Transaction
 
+test_users = [
+    "@Pupa",
+    "@Lupa",
+    "@Buhg"
+]
 
 def set_or_create_chat(id=-1, inited=True):
     try:
@@ -22,10 +27,8 @@ def destroy_chat(id=-1, inited=True):
     except:
         pass
 
-def make_transaction(debtor, creditor, amount):
+def make_transaction_mock(**kwargs):
     mock = Mock(Transaction)
-    mock.debtor.username = debtor
-    mock.creditor.username = creditor
-    mock.amount = amount
+    mock.configure_mock(**kwargs)
 
     return mock

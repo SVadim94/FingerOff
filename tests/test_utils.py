@@ -1,6 +1,8 @@
 import unittest
 
-from utils import is_int, join_columns
+from models import User, UserBalance
+from tutils import *
+from utils import *
 
 
 class TestUtils(unittest.TestCase):
@@ -19,3 +21,64 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(join_columns(['a']), "a")
 
         self.assertEqual(join_columns([]), 'No results')
+
+    def test_merge_transactions(self):
+        self.chat = set_or_create_chat()
+
+        t1 = make_transaction_mock(
+            chat=self.chat,
+            debtor=get_or_create_user(test_users[0]),
+            creditor=get_or_create_user(test_users[1]),
+            amount=1
+        )
+
+        t2 = make_transaction_mock(
+            chat=self.chat,
+            debtor=get_or_create_user(test_users[1]),
+            creditor=get_or_create_user(test_users[2]),
+            amount=2
+        )
+
+        t3 = make_transaction_mock(
+            chat=self.chat,
+            debtor=get_or_create_user(test_users[2]),
+            creditor=get_or_create_user(test_users[0]),
+            amount=1
+        )
+
+        merge_transaction(t1)
+
+        check = lambda name, balance: self.assertEqual(
+            UserBalance.get(
+                (UserBalance.chat == self.chat) &
+                (UserBalance.user == get_or_create_user(name))
+            ).balance,
+            balance
+        )
+
+        check(test_users[0], 1)
+        check(test_users[1], -1)
+        with self.assertRaises(peewee.DoesNotExist):
+            check(test_users[2], 0)
+
+        merge_transaction(t2)
+
+        check(test_users[0], 1)
+        check(test_users[1], 1)
+        check(test_users[2], -2)
+
+        merge_transaction(t3)
+
+        with self.assertRaises(peewee.DoesNotExist):
+            check(test_users[0], 0)
+        check(test_users[1], 1)
+        check(test_users[2], -1)
+
+        destroy_chat()
+
+    def test_get_or_create_user(self):
+        for _ in range(2):
+            for username in test_users:
+                user = get_or_create_user(username)
+                self.assertEqual(user.username, username.lower())
+                user.delete_instance()
