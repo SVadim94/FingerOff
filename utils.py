@@ -9,10 +9,10 @@ cr = CurrencyRates(force_decimal=True)
 
 def check_inited(need_to_be_inited, need_to_be_checked=True):
     def wrapper(foo):
-        if not need_to_be_checked:
-            return foo
-
         def wrapped(*args, **kwargs):
+            if not need_to_be_checked:
+                return foo(*args, **kwargs)
+
             chat, _ = Chat.get_or_create(id=args[0].chat.id)
 
             if need_to_be_inited == chat.inited:
@@ -75,6 +75,7 @@ def merge_transaction(transaction):
 
 def get_or_create_user(username):
     return User.get_or_create(username=username.lower())[0]
+
 
 def subset_sum(users, ss=0):
     sums = {}

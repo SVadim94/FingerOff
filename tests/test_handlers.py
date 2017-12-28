@@ -11,34 +11,48 @@ class TestHandlers(unittest.TestCase):
         self.chat = set_or_create_chat()
         self.message = Mock()
         self.message.chat = self.chat
-
-    def test_show(self):
-        self.assertEqual(show(self.message, '1'), 'No results')
+        self.add = lambda f, t, a: add(self.message, test_users[f], test_users[t], str(a))
+        self.assertLinesCount = lambda args, lines: self.assertEqual(
+            len(show(self.message, *args).split('\n')),
+            lines
+        )
 
     def test_add(self):
-        add(self.message, test_users[0], test_users[1], "10", "EUR")
-        add(self.message, test_users[0], test_users[1], "5", "EUR")
-        add(self.message, test_users[0], test_users[2], "15", "EUR")
+        count = lambda: Transaction.select().where(Transaction.chat == self.chat).count()
+
+        self.add(0, 1, 10)
+        self.assertEqual(count(), 1)
+
+        self.add(0, 1, 5)
+        self.assertEqual(count(), 2)
+
+        self.add(0, 2, 15)
+        self.assertEqual(count(), 3)
+
+    def test_show(self):
+        self.add(0, 1, 10)
+        self.add(0, 1, 5)
+        self.add(0, 2, 15)
 
         self.assertNotEqual(show(self.message, '1'), 'No results')
 
-        self.assertEqual(len(show(self.message, '1').split('\n')), 1)
+        self.assertLinesCount(['1'], 1)
         self.assertEqual(show(self.message, '0'), "No results")
         # self.assertEqual(show(self.message, '-1'), "No results")
 
-        self.assertEqual(len(show(self.message, test_users[0]).split('\n')), 3)
-        self.assertEqual(len(show(self.message, test_users[1]).split('\n')), 2)
-        self.assertEqual(len(show(self.message, test_users[2]).split('\n')), 1)
+        self.assertLinesCount([test_users[0]], 3)
+        self.assertLinesCount([test_users[1]], 2)
+        self.assertLinesCount([test_users[2]], 1)
         self.assertNotEqual(show(self.message, test_users[2]), 'No results')
 
-        self.assertEqual(len(show(self.message, test_users[0], '1').split('\n')), 1)
-        self.assertEqual(len(show(self.message, test_users[0], '2').split('\n')), 2)
-        self.assertEqual(len(show(self.message, test_users[0], '3').split('\n')), 3)
-        self.assertEqual(len(show(self.message, '20', test_users[1]).split('\n')), 2)
-        self.assertEqual(len(show(self.message, test_users[2], '10').split('\n')), 1)
+        self.assertLinesCount([test_users[0], '1'], 1)
+        self.assertLinesCount([test_users[0], '2'], 2)
+        self.assertLinesCount([test_users[0], '3'], 3)
+        self.assertLinesCount(['20', test_users[1]], 2)
+        self.assertLinesCount([test_users[2], '10'], 1)
         self.assertNotEqual(show(self.message, test_users[2], '10'), 'No results')
 
-        self.assertEqual(len(show(self.message, test_users[0], test_users[1]).split('\n')), 2)
+        self.assertLinesCount([test_users[0], test_users[1]], 2)
         self.assertEqual(show(self.message, test_users[2], test_users[1]), 'No results')
 
     def test_annotated(self):
