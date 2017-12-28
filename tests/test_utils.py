@@ -1,4 +1,5 @@
 import unittest
+from random import choices, randrange
 
 from models import User, UserBalance
 from tutils import *
@@ -83,8 +84,63 @@ class TestUtils(unittest.TestCase):
                 self.assertEqual(user.username, username.lower())
                 user.delete_instance()
 
+    def test_dict_split(self):
+        for _ in range(100):
+            dic, _ = generate_test_set()
+            dic_pos, dic_neg = dict_split(dic)
+            sp, sn, s = set(dic_pos.keys()), set(dic_neg.keys()), set(dic.keys())
+
+            self.assertDictContainsSubset(dic_pos, dic)
+            self.assertDictContainsSubset(dic_neg, dic)
+            self.assertSetEqual(sp | sn, s)
+            self.assertSetEqual(sp & sn, set())
+
+    def test_dict_equal_sums(self):
+        for _ in range(100):
+            dic, _ = generate_test_set()
+            dic[test_users[0]] = random.randrange(-2**32, 2**32)
+            dic[test_users[1]] = -dic[test_users[0]]
+            dic_pos, dic_neg = dict_split(dic)
+            
+            if not dic_pos or not dic_neg:
+                continue
+
+            cdic = dic.copy()
+            cdic_pos = dic_pos.copy()
+            cdic_neg = dic_neg.copy()
+
+            self.assertTrue(dict_equal_sums(dic, dic_pos, dic_neg))
+            self.assertNotEqual(cdic, dic)
+            self.assertNotEqual(cdic_pos, dic_pos)
+            self.assertNotEqual(cdic_neg, dic_neg)
+
+            cdic = dic.copy()
+            cdic_pos = dic_pos.copy()
+            cdic_neg = dic_neg.copy()
+
+            self.assertFalse(dict_equal_sums(dic, dic_pos, dic_neg))
+            self.assertDictEqual(cdic, dic)
+            self.assertDictEqual(cdic_pos, dic_pos)
+            self.assertDictEqual(cdic_neg, dic_neg)
+
     def test_subset_sum(self):
         for _ in range(100):
             balances, ss = generate_test_set()
             group = subset_sum(balances, ss)
             self.assertEqual(sum(balances[user] for user in group), ss)
+
+    def test_dict_merge(self):
+        ranges = (1, 2**32), (-2**32, -1)
+
+        for i in range(100):
+            balances, _ = generate_test_set()
+            x, y = choices([key for key in balances.keys()], k=2)
+
+            old_x_balance, old_y_balance = balances[x], balances[y]
+            dict_merge(balances, (x, y, random.randrange(*ranges[i % 2])))
+
+            if x != y:
+                self.assertNotEqual(balances[x], old_x_balance)
+                self.assertNotEqual(balances[y], old_y_balance)
+
+            self.assertEqual(balances[x] + balances[y], old_x_balance + old_y_balance)

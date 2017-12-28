@@ -83,7 +83,48 @@ def show(message, *args):
 
 @check_inited(True)
 def foff(message):
-    return "Not implemented"
+    transactions = []
+
+    balances = { rec.user.username: rec.balance for rec in UserBalance.select() }
+    balances_pos, balances_neg = dict_split(balances)
+
+    # eliminate equals
+    while True:
+        update = dict_equal_sums(balances, balances_pos, balances_neg)
+
+        if not update:
+            break
+
+        transactions.extend(update)
+
+    # eliminate sums
+    to_del = []
+
+    for kn, vn in balances_neg.items():
+        group = subset_sum(balances_pos, -vn)
+
+        if group:
+            for kp in group:
+                # add transaction
+                transactions.append((kp, kn, balances_pos[kp]))
+
+                # update balances
+                dict_merge(balances, (kp, kn, balances_pos[kp]))
+
+                # update balances_pos
+                del balances_pos[kp]
+
+            to_del.append(kn)
+
+    for kn in to_del:
+        del balances_neg[kn]
+
+    # greedy algo
+    # TBD
+
+    cur_code = Chat.get(Chat.id == message.chat.id).currency
+    return '\n'.join("%s transfers %s %s to %s" % (s, str(a), cur_code, d) for s, d, a in transactions)
+
 
 @check_inited(False, False)
 def usage(_):
