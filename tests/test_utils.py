@@ -82,3 +82,9 @@ class TestUtils(unittest.TestCase):
                 user = get_or_create_user(username)
                 self.assertEqual(user.username, username.lower())
                 user.delete_instance()
+
+    def test_subset_sum(self):
+        for _ in range(100):
+            balances, ss = generate_test_set()
+            group = subset_sum(balances, ss)
+            self.assertEqual(sum(balances[user] for user in group), ss)

@@ -3,43 +3,8 @@ from decimal import Decimal
 from itertools import filterfalse
 from uuid import uuid4
 
-from forex_python.converter import CurrencyCodes, CurrencyRates
-
-from models import Chat, UserBalance, Transaction, TransactionType, User
-from utils import is_int, join_columns, merge_transaction, get_or_create_user
-
-cc = CurrencyCodes()
-cr = CurrencyRates(force_decimal=True)
-
-
-def check_inited(need_to_be_inited):
-    def wrapper(foo):
-        def wrapped(*args, **kwargs):
-            chat, _ = Chat.get_or_create(id=args[0].chat.id)
-
-            if need_to_be_inited == chat.inited:
-                return foo(*args, **kwargs)
-
-            if need_to_be_inited:
-                return "Please, /init first"
-            else:
-                return "Already inited"
-
-        return wrapped
-
-    return wrapper
-
-
-def check_currency(currency, default_currency):
-    if not currency:
-        return default_currency
-
-    currency = currency.upper()
-
-    if cc.get_currency_name(currency):
-        return currency
-    else:
-        return default_currency
+from models import Chat, Transaction, TransactionType, User, UserBalance
+from utils import *
 
 
 @check_inited(True)
@@ -116,16 +81,23 @@ def show(message, *args):
     return join_columns(Transaction.select().join(Chat).where(query).order_by(Transaction.timestamp.desc()).limit(N))
 
 
+@check_inited(True)
+def foff(message):
+    return "Not implemented"
+
+@check_inited(False, False)
 def usage(_):
     return """\
 Usage:
 
 /init <currency>
-    set default currency for debts
+    set default currency for debts (default is RUB)
 /add <debtor> <creditor> <amount> [currency]
     add a debt
 /balance
     shows balance for current chat
+/foff
+    prints possible transactions
 /show [N] [@nickname] [@nickname]
     prints transactions:
         N - last N transactions (default 10)
@@ -147,6 +119,7 @@ handlers = {
     "/init": set_default_currency,
     "/add": add,
     "/balance": balance,
+    "/foff": foff,
     "/show": show,
     "/usage": usage
 }

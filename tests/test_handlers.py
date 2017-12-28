@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock
 
-from handlers import add, show
+from handlers import *
 from tutils import *
 
 
@@ -40,6 +40,9 @@ class TestHandlers(unittest.TestCase):
 
         self.assertEqual(len(show(self.message, test_users[0], test_users[1]).split('\n')), 2)
         self.assertEqual(show(self.message, test_users[2], test_users[1]), 'No results')
+
+    def test_annotated(self):
+        self.assertFalse(check_annotated("handlers"))
 
     def tearDown(self):
         destroy_chat()
