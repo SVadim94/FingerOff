@@ -1,8 +1,10 @@
 import unittest
 from unittest.mock import Mock
 
-from handlers import *
+from handlers import foff, show, transfer
+from models import UserBalance
 from tutils import *
+from utils.db import get_or_create_user
 
 
 class TestHandlers(unittest.TestCase):
@@ -40,6 +42,7 @@ class TestHandlers(unittest.TestCase):
         self.assertEqual(show(self.message, '0'), "No results")
         # self.assertEqual(show(self.message, '-1'), "No results")
 
+        print(show(self.message, *[test_users[0]]))
         self.assertLinesCount([test_users[0]], 3)
         self.assertLinesCount([test_users[1]], 2)
         self.assertLinesCount([test_users[2]], 1)

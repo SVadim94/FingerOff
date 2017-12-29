@@ -1,5 +1,6 @@
 from models import Chat
 from functools import wraps
+import peewee
 
 
 def check_inited(needs_to_be_existed, needs_to_be_checked=True):
@@ -12,7 +13,7 @@ def check_inited(needs_to_be_existed, needs_to_be_checked=True):
             try:
                 chat = Chat.get(id=args[0].chat.id)
                 exists = True
-            except DoesNotExist:
+            except peewee.DoesNotExist:
                 exists = False
 
             if needs_to_be_existed == exists:

@@ -19,3 +19,7 @@ def check_currency(currency, default=None):
 def available_currencies():
     currencies = "USD, " + ", ".join(cr.get_rates("USD").keys())
     return "No such currency. Available currencies:\n%s" % currencies
+
+
+def convert(src, dst, amount):
+    return cr.convert(src, dst, amount)
