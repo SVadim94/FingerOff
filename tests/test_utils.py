@@ -24,7 +24,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(join_columns([]), 'No results')
 
     def test_merge_transactions(self):
-        self.chat = set_or_create_chat()
+        self.chat = create_chat()
 
         t1 = make_transaction_mock(
             chat=self.chat,

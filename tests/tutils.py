@@ -36,19 +36,13 @@ def generate_test_set(valid):
         return balances, ss
 
 
-def set_or_create_chat(id=-1, inited=True):
-    try:
-        chat = Chat.create(id=id, inited=inited)
-    except:
-        chat = Chat.get(id=id)
-        chat.inited = inited
-
-    chat.save()
-
+def create_chat(id=-1):
+    chat, _ = Chat.get_or_create(id=id)
+    
     return chat
 
 
-def destroy_chat(id=-1, inited=True):
+def destroy_chat(id=-1):
     try:
         Chat.get(id=id).delete_instance(recursive=True)
     except:
@@ -67,9 +61,11 @@ def check_annotated(module_name):
     module = import_module(module_name)
 
     functions = inspect.getmembers(module, inspect.isfunction)
+    functions = [function for function in functions if inspect.getmodule(function[1]).__name__ == module_name]
+    print(functions)
 
     not_annotated = [
-        function[1].__name__ for function in functions if inspect.getmodule(function[1]).__name__ == module_name
+        function[1].__name__ for function in functions if not hasattr(function[1], 'checks_inited')
     ]
 
     return not_annotated

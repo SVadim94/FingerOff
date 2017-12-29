@@ -9,6 +9,8 @@ from utils import *
 
 @check_inited(True)
 def transfer(message, creditor, debtor, amount, currency=None):
+    """/transfer <debtor> <creditor> <amount> [currency]
+    transfer a debt"""
     chat, _ = Chat.get_or_create(id=message.chat.id)
     creditor = get_or_create_user(creditor)
     debtor = get_or_create_user(debtor)
@@ -16,6 +18,9 @@ def transfer(message, creditor, debtor, amount, currency=None):
     original_amount = amount
 
     currency = check_currency(currency, chat.currency)
+
+    if currency is None:
+        return available_currencies()
 
     if currency != chat.currency:
         amount = cr.convert(currency, chat.currency, amount)
@@ -40,23 +45,32 @@ def transfer(message, creditor, debtor, amount, currency=None):
 
 
 @check_inited(False)
-def set_default_currency(message, currency='RUB'):
-    chat, _ = Chat.get_or_create(id=message.chat.id)
-    old_currency = chat.currency
-    chat.currency = check_currency(currency, chat.currency)
-    chat.inited = True
-    chat.save()
+def set_default_currency(message, currency=None):
+    """/init <currency>
+    set default currency for transfers"""
+    currency = check_currency(currency)
 
-    return "Changed the default currency from %s to %s" % (old_currency, chat.currency)
+    if currency is None:
+        return available_currencies()
+
+    chat = Chat.create(id=message.chat.id, currency = currency)
+
+    return "Default currency was set to %s" % chat.currency
 
 
 @check_inited(True)
 def balance(message):
+    """/balance
+    shows balance for current chat"""
     return join_columns(UserBalance.select().where(UserBalance.chat == Chat.get(Chat.id == message.chat.id)))
 
 
 @check_inited(True)
 def show(message, *args):
+    """/show [N] [@nickname] [@nickname]
+    prints transactions:
+        N - last N transactions (default 10)
+        @nickname - transactions related to @nickname user"""
     usernames = [_ for _ in args if _.startswith('@')]
     numbers = [_ for _ in args if is_int(_)]
 
@@ -83,9 +97,11 @@ def show(message, *args):
 
 @check_inited(True)
 def foff(message):
+    """/foff
+    prints possible transactions"""
     transactions = []
 
-    balances = { rec.user.username: rec.balance for rec in UserBalance.select().where(UserBalance.chat == message.chat) }
+    balances = { rec.user.username: rec.balance for rec in UserBalance.select().where(UserBalance.chat == Chat.get(id=message.chat.id)) }
     balances_pos, balances_neg = dict_split(balances)
 
     # eliminate equals
@@ -154,21 +170,15 @@ Total transfers: %(total)d
 
 @check_inited(False, False)
 def usage(_):
-    return """\
-Usage:
+    """/usage
+    show this message"""
 
-/init <currency>
-    set default currency for debts (default is RUB)
-/transfer <debtor> <creditor> <amount> [currency]
-    transfer a debt
-/balance
-    shows balance for current chat
-/foff
-    prints possible transactions
-/show [N] [@nickname] [@nickname]
-    prints transactions:
-        N - last N transactions (default 10)
-        @nickname - transactions related to @nickname user
+    return \
+"""Usage:
+
+%s
+
+TBD:
 /cancel <transaction_id>
     cancels transaction by its id
 /archive
@@ -176,11 +186,7 @@ Usage:
 /get <archive_id>
     get archive by id
 /purge
-    cleans debts history (history will be archived)
-/usage
-    show this message
-"""
-
+    cleans debts history (history will be archived)""" % "\n".join(handler.__doc__ for handler in handlers.values())
 
 handlers = {
     "/init": set_default_currency,

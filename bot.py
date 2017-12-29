@@ -15,7 +15,7 @@ def calculator(message):
         msg = handlers.get(cmd[0], handlers['/usage'])(message, *cmd[1:])
         bot.send_message(message.chat.id, msg)
     except Exception as e:
-        bot.send_message(message.chat.id, "An error occured")
+        bot.send_message(message.chat.id, "An error occured (see /usage)")
         traceback.print_exc()
 
 if __name__ == '__main__':

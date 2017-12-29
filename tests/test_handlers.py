@@ -8,7 +8,7 @@ from tutils import *
 class TestHandlers(unittest.TestCase):
     def setUp(self):
         # Create test chat with id equals to -1
-        self.chat = set_or_create_chat()
+        self.chat = create_chat()
         self.message = Mock()
         self.message.chat = self.chat
         self.transfer = lambda f, t, a: transfer(self.message, test_users[f], test_users[t], str(a))

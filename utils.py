@@ -1,5 +1,7 @@
-from forex_python.converter import CurrencyCodes, CurrencyRates
+from functools import wraps
 
+from forex_python.converter import CurrencyCodes, CurrencyRates
+from peewee import DoesNotExist
 import config
 from models import Chat, User, UserBalance, db
 
@@ -7,37 +9,43 @@ cc = CurrencyCodes()
 cr = CurrencyRates(force_decimal=True)
 
 
-def check_inited(need_to_be_inited, need_to_be_checked=True):
+def check_inited(needs_to_be_existed, needs_to_be_checked=True):
     def wrapper(foo):
+        @wraps(foo)
         def wrapped(*args, **kwargs):
-            if not need_to_be_checked:
+            if not needs_to_be_checked:
                 return foo(*args, **kwargs)
 
-            chat, _ = Chat.get_or_create(id=args[0].chat.id)
+            try:
+                chat = Chat.get(id=args[0].chat.id)
+                exists = True
+            except DoesNotExist:
+                exists = False
 
-            if need_to_be_inited == chat.inited:
+            if needs_to_be_existed == exists:
                 return foo(*args, **kwargs)
 
-            if need_to_be_inited:
+            if needs_to_be_existed:
                 return "Please, /init first"
             else:
                 return "Already inited"
 
+        wrapped.checks_inited = True
         return wrapped
 
     return wrapper
 
 
-def check_currency(currency, default_currency):
-    if not currency:
-        return default_currency
+def check_currency(currency, default=None):
+    if currency is None:
+        return default
 
     currency = currency.upper()
 
     if cc.get_currency_name(currency):
         return currency
     else:
-        return default_currency
+        return None
 
 
 def is_int(n):
@@ -199,3 +207,8 @@ def run_strategy(balances, get_debtor, get_creditor, get_amount):
         dict_merge(balances, transaction)
 
     return transactions
+
+
+def available_currencies():
+    currencies = "USD, " + ", ".join(cr.get_rates("USD").keys())
+    return "No such currency. Available currencies:\n%s" % currencies
