@@ -3,7 +3,12 @@ from random import choice, choices, randrange
 
 from models import User, UserBalance
 from tutils import *
-from utils import *
+from utils.db import get_or_create_user, merge_transaction
+from utils.dict_functions import (dict_equal_sums, dict_merge, dict_split,
+                                  subset_sum)
+from utils.misc import is_int
+from utils.output import join_columns
+from utils.strategies import all_money, get_max, get_min, not_more
 
 
 class TestUtils(unittest.TestCase):

@@ -62,7 +62,6 @@ def check_annotated(module_name):
 
     functions = inspect.getmembers(module, inspect.isfunction)
     functions = [function for function in functions if inspect.getmodule(function[1]).__name__ == module_name]
-    print(functions)
 
     not_annotated = [
         function[1].__name__ for function in functions if not hasattr(function[1], 'checks_inited')
