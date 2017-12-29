@@ -114,26 +114,27 @@ def foff(message):
         transactions.extend(update)
 
     # eliminate sums
-    to_del = []
+    if len(balances.keys()) < 20:
+        to_del = []
 
-    for kn, vn in balances_neg.items():
-        group = subset_sum(balances_pos, -vn)
+        for kn, vn in balances_neg.items():
+            group = subset_sum(balances_pos, -vn)
 
-        if group:
-            for kp in group:
-                # add transaction
-                transactions.append((kp, kn, balances_pos[kp]))
+            if group:
+                for kp in group:
+                    # add transaction
+                    transactions.append((kp, kn, balances_pos[kp]))
 
-                # update balances
-                dict_merge(balances, (kp, kn, balances_pos[kp]))
+                    # update balances
+                    dict_merge(balances, (kp, kn, balances_pos[kp]))
 
-                # update balances_pos
-                del balances_pos[kp]
+                    # update balances_pos
+                    del balances_pos[kp]
 
-            to_del.append(kn)
+                to_del.append(kn)
 
-    for kn in to_del:
-        del balances_neg[kn]
+        for kn in to_del:
+            del balances_neg[kn]
 
     text = ""
     cur_code = Chat.get(Chat.id == message.chat.id).currency
