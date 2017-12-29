@@ -8,7 +8,7 @@ from utils import *
 
 
 @check_inited(True)
-def add(message, creditor, debtor, amount, currency=None):
+def transfer(message, creditor, debtor, amount, currency=None):
     chat, _ = Chat.get_or_create(id=message.chat.id)
     creditor = get_or_create_user(creditor)
     debtor = get_or_create_user(debtor)
@@ -85,7 +85,7 @@ def show(message, *args):
 def foff(message):
     transactions = []
 
-    balances = { rec.user.username: rec.balance for rec in UserBalance.select() }
+    balances = { rec.user.username: rec.balance for rec in UserBalance.select().where(UserBalance.chat == message.chat) }
     balances_pos, balances_neg = dict_split(balances)
 
     # eliminate equals
@@ -121,7 +121,7 @@ def foff(message):
 
     text = ""
     cur_code = Chat.get(Chat.id == message.chat.id).currency
-    to_str = lambda transactions: '\n'.join("/add %s %s %s" % (s, d, str(a)) for s, d, a in transactions)
+    to_str = lambda transactions: '\n'.join("/transfer %s %s %s" % (s, d, str(a)) for s, d, a in transactions)
     easy_part = to_str(transactions)
     if easy_part:
         text += \
@@ -159,8 +159,8 @@ Usage:
 
 /init <currency>
     set default currency for debts (default is RUB)
-/add <debtor> <creditor> <amount> [currency]
-    add a debt
+/transfer <debtor> <creditor> <amount> [currency]
+    transfer a debt
 /balance
     shows balance for current chat
 /foff
@@ -184,7 +184,7 @@ Usage:
 
 handlers = {
     "/init": set_default_currency,
-    "/add": add,
+    "/transfer": transfer,
     "/balance": balance,
     "/foff": foff,
     "/show": show,

@@ -11,28 +11,28 @@ class TestHandlers(unittest.TestCase):
         self.chat = set_or_create_chat()
         self.message = Mock()
         self.message.chat = self.chat
-        self.add = lambda f, t, a: add(self.message, test_users[f], test_users[t], str(a))
+        self.transfer = lambda f, t, a: transfer(self.message, test_users[f], test_users[t], str(a))
         self.assertLinesCount = lambda args, lines: self.assertEqual(
             len(show(self.message, *args).split('\n')),
             lines
         )
 
-    def test_add(self):
+    def test_transfer(self):
         count = lambda: Transaction.select().where(Transaction.chat == self.chat).count()
 
-        self.add(0, 1, 10)
+        self.transfer(0, 1, 10)
         self.assertEqual(count(), 1)
 
-        self.add(0, 1, 5)
+        self.transfer(0, 1, 5)
         self.assertEqual(count(), 2)
 
-        self.add(0, 2, 15)
+        self.transfer(0, 2, 15)
         self.assertEqual(count(), 3)
 
     def test_show(self):
-        self.add(0, 1, 10)
-        self.add(0, 1, 5)
-        self.add(0, 2, 15)
+        self.transfer(0, 1, 10)
+        self.transfer(0, 1, 5)
+        self.transfer(0, 2, 15)
 
         self.assertNotEqual(show(self.message, '1'), 'No results')
 
@@ -61,19 +61,21 @@ class TestHandlers(unittest.TestCase):
 
             UserBalance.delete().where(UserBalance.chat == self.chat)
 
+            self.assertListEqual(list(UserBalance.select().where(UserBalance.chat == self.chat)), [])
+
             for k, v in balances.items():
                 UserBalance.create(chat=self.chat, user=get_or_create_user(k), balance=v)
 
-            self.assertNotEqual(list(UserBalance.select()), [])
+            self.assertNotEqual(list(UserBalance.select().where(UserBalance.chat == self.chat)), [])
 
             output = foff(self.message).split('\n')
-            output = filter(lambda line: '/add' in line, output)
+            output = filter(lambda line: '/transfer' in line, output)
 
             for line in output:
                 args = line.split(' ')[1:]
-                add(self.message, *args)
+                transfer(self.message, *args)
 
-            self.assertListEqual(list(UserBalance.select()), [])
+            self.assertListEqual(list(UserBalance.select().where(UserBalance.chat == self.chat)), [])
 
     def test_annotated(self):
         self.assertFalse(check_annotated("handlers"))
