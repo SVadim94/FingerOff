@@ -1,5 +1,5 @@
 import inspect
-import random
+from random import choice, randrange, sample
 from unittest.mock import Mock
 
 import peewee
@@ -22,11 +22,18 @@ test_users = [
 ]
 
 
-def generate_test_set():
-    group = random.sample(test_users, random.randrange(1, len(test_users)))
-    balances = { user: random.randrange(-2**32, 2**32) for user in test_users }
-    ss = sum(balances[user] for user in group)
-    return balances, ss
+def generate_test_set(valid):
+    if valid:
+        balances = { user: randrange(1, 2**32) * choice([-1, 1]) for user in test_users[:-1] }
+        balances[test_users[-1]] = -sum(balances.values())
+
+        return balances
+    else:
+        group = sample(test_users, randrange(1, len(test_users)))
+        balances = { user: randrange(-2**32, 2**32) for user in test_users }
+        ss = sum(balances[user] for user in group)
+
+        return balances, ss
 
 
 def set_or_create_chat(id=-1, inited=True):

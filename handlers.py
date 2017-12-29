@@ -119,12 +119,38 @@ def foff(message):
     for kn in to_del:
         del balances_neg[kn]
 
-    # greedy algo
-    # TBD
-
+    text = ""
     cur_code = Chat.get(Chat.id == message.chat.id).currency
-    return '\n'.join("%s transfers %s %s to %s" % (s, str(a), cur_code, d) for s, d, a in transactions)
+    to_str = lambda transactions: '\n'.join("/add %s %s %s" % (s, d, str(a)) for s, d, a in transactions)
+    easy_part = to_str(transactions)
+    if easy_part:
+        text += \
+"""Easy part is:
 
+%s
+
+""" % easy_part
+
+    if balances:
+        result, desc_debtor, desc_creditor, desc_amount = min(run(balances), key=lambda x: x[3])
+        hard_part = \
+"""Strategy: the debtor %(desc_debtor)s debt transfers the %(desc_amount)s to the creditor %(desc_creditor)s credit
+Total transfers: %(total)d
+
+%(result)s
+""" % {
+    "desc_debtor": desc_debtor,
+    "desc_creditor": desc_creditor,
+    "desc_amount": desc_amount,
+    "total": len(result),
+    "result": to_str(result)
+}
+        text += \
+"""The hard part is the following:
+%s
+""" % hard_part
+
+    return text
 
 @check_inited(False, False)
 def usage(_):

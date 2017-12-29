@@ -55,6 +55,26 @@ class TestHandlers(unittest.TestCase):
         self.assertLinesCount([test_users[0], test_users[1]], 2)
         self.assertEqual(show(self.message, test_users[2], test_users[1]), 'No results')
 
+    def test_foff(self):
+        for _ in range(100):
+            balances = generate_test_set(True)
+
+            UserBalance.delete().where(UserBalance.chat == self.chat)
+
+            for k, v in balances.items():
+                UserBalance.create(chat=self.chat, user=get_or_create_user(k), balance=v)
+
+            self.assertNotEqual(list(UserBalance.select()), [])
+
+            output = foff(self.message).split('\n')
+            output = filter(lambda line: '/add' in line, output)
+
+            for line in output:
+                args = line.split(' ')[1:]
+                add(self.message, *args)
+
+            self.assertListEqual(list(UserBalance.select()), [])
+
     def test_annotated(self):
         self.assertFalse(check_annotated("handlers"))
 
