@@ -3,7 +3,7 @@ from decimal import Decimal
 from uuid import uuid4
 
 from models import Chat, Transaction, TransactionType
-from utils.currency import check_currency, convert
+from utils.currency import available_currencies, check_currency, convert
 from utils.db import get_or_create_user, merge_transaction
 from utils.decorators import check_inited
 

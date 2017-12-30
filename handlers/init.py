@@ -1,3 +1,5 @@
+from models import Chat
+from utils.currency import available_currencies, check_currency
 from utils.decorators import check_inited
 
 

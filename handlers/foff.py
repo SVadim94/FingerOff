@@ -3,13 +3,14 @@ from utils.decorators import check_inited
 from utils.dict_functions import (dict_equal_sums, dict_merge, dict_split,
                                   subset_sum)
 from utils.strategies import run
+from utils.output import transfers_to_str
 
 
 @check_inited(True)
 def foff(message):
     """/foff
-    prints possible transactions"""
-    transactions = []
+    prints possible transfers"""
+    transfers = []
 
     balances = { rec.user.username: rec.balance for rec in UserBalance.select().where(UserBalance.chat == Chat.get(id=message.chat.id)) }
     balances_pos, balances_neg = dict_split(balances)
@@ -21,7 +22,7 @@ def foff(message):
         if not update:
             break
 
-        transactions.extend(update)
+        transfers.extend(update)
 
     # eliminate sums
     if len(balances.keys()) < 20:
@@ -32,8 +33,8 @@ def foff(message):
 
             if group:
                 for kp in group:
-                    # add transaction
-                    transactions.append((kp, kn, balances_pos[kp]))
+                    # add transfer
+                    transfers.append((kp, kn, balances_pos[kp]))
 
                     # update balances
                     dict_merge(balances, (kp, kn, balances_pos[kp]))
@@ -48,8 +49,7 @@ def foff(message):
 
     text = ""
     cur_code = Chat.get(Chat.id == message.chat.id).currency
-    to_str = lambda transactions: '\n'.join("/transfer %s %s %s" % (s, d, str(a)) for s, d, a in transactions)
-    easy_part = to_str(transactions)
+    easy_part = transfers_to_str(transfers)
     if easy_part:
         text += \
 """Easy part is:
@@ -70,7 +70,7 @@ Total transfers: %(total)d
     "desc_creditor": desc_creditor,
     "desc_amount": desc_amount,
     "total": len(result),
-    "result": to_str(result)
+    "result": transfers_to_str(result)
 }
         text += \
 """The hard part is the following:
